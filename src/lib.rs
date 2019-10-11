@@ -1,17 +1,35 @@
 mod utils;
 
-use gif::Encoder;
+extern crate cfg_if;
+extern crate gif;
+extern crate wasm_bindgen;
+
+use cfg_if::cfg_if;
+use std::fs::File;
+
 use wasm_bindgen::prelude::*;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+cfg_if! {
+    // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
+    // allocator.
+    if #[cfg(feature = "wee_alloc")] {
+        extern crate wee_alloc;
+        #[global_allocator]
+        static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+    }
+}
 
 #[wasm_bindgen]
-pub fn add(a:i32, b:i32) -> i32 {
-    a + b
+pub fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+#[wasm_bindgen]
+pub fn str(str1: String, str2: String) -> String {
+    let mut s = String::new();
+    s.push_str(&str1);
+    s.push_str(&str2);
+    return s;
 }
 
 #[wasm_bindgen]
@@ -37,11 +55,23 @@ pub fn frames_array2frames(width: u16, height: u16, frames_array: Vec<u8>) -> Ve
 pub fn encode_gif(width: u16, height: u16, frames_array: Vec<u8>) -> Vec<u8> {
     let mut image = Vec::new();
     {
-        let mut encoder = Encoder::new(&mut image, width, height, &[]).unwrap();
+        let mut encoder = gif::Encoder::new(&mut image, width, height, &[]).unwrap();
         for frame in frames_array2frames(width, height, frames_array) {
             let _frame = gif::Frame::from_rgb(width, height, &frame);
             encoder.write_frame(&_frame).unwrap();
         }
     }
     return image;
+}
+
+#[wasm_bindgen]
+pub fn decoder_png(p: String) -> Vec<u8> {
+    let decoder = png::Decoder::new(File::open(&p).unwrap());
+    let (info, mut reader) = decoder.read_info().unwrap();
+    // Allocate the output buffer.
+    let mut buf = vec![0; info.buffer_size()];
+    // Read the next frame. Currently this function should only called once.
+    // The default options
+    reader.next_frame(&mut buf).unwrap();
+    return buf;
 }
