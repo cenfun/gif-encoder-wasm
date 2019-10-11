@@ -1,5 +1,5 @@
 [package]
-name = "wasm-gif"
+name = "wasm-gif-encoder"
 version = "0.1.0"
 authors = ["cenfun <cenfun@gmail.com>"]
 edition = "2018"
