@@ -5,7 +5,10 @@ extern crate gif;
 extern crate wasm_bindgen;
 
 use cfg_if::cfg_if;
-use std::fs::File;
+
+// use std::error::Error;
+// use std::fs::File;
+// use std::path::Path;
 
 use wasm_bindgen::prelude::*;
 
@@ -65,13 +68,28 @@ pub fn encode_gif(width: u16, height: u16, frames_array: Vec<u8>) -> Vec<u8> {
 }
 
 #[wasm_bindgen]
-pub fn decoder_png(p: String) -> Vec<u8> {
-    let decoder = png::Decoder::new(File::open(&p).unwrap());
-    let (info, mut reader) = decoder.read_info().unwrap();
-    // Allocate the output buffer.
-    let mut buf = vec![0; info.buffer_size()];
-    // Read the next frame. Currently this function should only called once.
-    // The default options
-    reader.next_frame(&mut buf).unwrap();
-    return buf;
+pub fn decode_png(file: Vec<u8>) -> Vec<u8> {
+    // let path = Path::new("./job-1-1-drag-985.png");
+    // let display = path.display();
+
+    // let mut file = match File::open(&path) {
+    //     // The `description` method of `io::Error` returns a string that
+    //     // describes the error
+    //     Err(why) => panic!("couldn't open {}: {}", display, why.description()),
+    //     Ok(file) => file,
+    // };
+
+    // let image = File::open(&path).unwrap();
+    //let decoder = png::Decoder::new(file);
+    // let (info, mut reader) = decoder.read_info().unwrap();
+    // // Allocate the output buffer.
+    // let mut buf = vec![0; info.buffer_size()];
+    // // Read the next frame. Currently this function should only called once.
+    // // The default options
+    // reader.next_frame(&mut buf).unwrap();
+
+    // let list = Vec::new();
+    // list.push(file);
+
+    return file;
 }

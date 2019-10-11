@@ -2,7 +2,9 @@
 name = "wasm-gif-encoder"
 version = "0.1.0"
 authors = ["cenfun <cenfun@gmail.com>"]
-edition = "2018"
+description = "wasm-gif-encoder"
+repository = "https://github.com/cenfun/wasm-gif-encoder.git"
+license = ""
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -35,3 +37,5 @@ wasm-bindgen-test = "0.2"
 [profile.release]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
+
+

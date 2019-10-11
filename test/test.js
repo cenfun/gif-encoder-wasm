@@ -1,13 +1,14 @@
 const fs = require("fs");
+const path = require("path");
 const WasmGifEncoder = require("../lib");
+console.log(WasmGifEncoder);
 
-console.log(WasmGifEncoder.add(123, 456));
+console.log("number add: " + WasmGifEncoder.add(123, 456));
 
-console.log(WasmGifEncoder.str("str1", "str2"));
+console.log("string join: " + WasmGifEncoder.str("str1 ", "str2"));
 
 // let rgbs = GifEncoder.rgba2rgb([128, 128, 128, 0, 128, 128, 128, 128]);
 // console.log(rgbs);
-
 
 const getImagePixels = (image, w, h) => {
     let l = w * h;
@@ -38,14 +39,26 @@ const generateGif = (name) => {
         return folder + "/" + pngname;
     });
 
-    let list = frames.map((p) => {
-        //fs.readFileSync(p)
+    let p = frames[0];
+    let file = fs.readFileSync(path.resolve(p));
+    //console.log(file);
+    let u8a = new Uint8Array(file);
+    //console.log(u8a);
 
-        let buf = WasmGifEncoder.decoder_png(p);
-        return buf;
-    });
+    let buf = WasmGifEncoder.decode_png(u8a);
+    console.log(buf);
 
-    console.log("total frames: " + list.length);
+    // let list = frames.map((p) => {
+    //     //fs.readFileSync(p)
+
+    //     let buf = WasmGifEncoder.decode_png(path.resolve(p));
+
+    //     console.log(buf);
+
+    //     return buf;
+    // });
+
+    //console.log("total frames: " + list.length);
 
     console.log("generated and cost " + (Date.now() - time_start).toLocaleString() + "ms: " + gifpath);
 };
