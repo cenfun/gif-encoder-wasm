@@ -1,0 +1,7 @@
+{
+    "name": "wasm-gif-encoder",
+    "version": "1.0.1",
+    "description": "wasm-gif-encoder",
+    "main": "index.js",
+    "dependencies": {}
+}
