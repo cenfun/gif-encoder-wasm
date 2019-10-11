@@ -3,5 +3,8 @@
     "version": "1.0.1",
     "description": "wasm-gif-encoder",
     "main": "index.js",
-    "dependencies": {}
+    "scripts": {
+        "build": "wasm-pack build --target nodejs && node ./scripts/build.js",
+        "test": "node ./test/test.js"
+    }
 }
