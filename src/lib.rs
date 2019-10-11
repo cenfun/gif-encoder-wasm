@@ -5,11 +5,6 @@ extern crate gif;
 extern crate wasm_bindgen;
 
 use cfg_if::cfg_if;
-
-// use std::error::Error;
-// use std::fs::File;
-// use std::path::Path;
-
 use wasm_bindgen::prelude::*;
 
 cfg_if! {
@@ -35,15 +30,6 @@ pub fn str(str1: String, str2: String) -> String {
     return s;
 }
 
-#[wasm_bindgen]
-pub fn rgba2rgb(pixels: &[u8]) -> Vec<u8> {
-    let mut rgb_pixels: Vec<u8> = Vec::new();
-    for v in pixels.chunks(4) {
-        rgb_pixels.extend([v[0], v[1], v[2]].iter().cloned())
-    }
-    rgb_pixels
-}
-
 pub fn frames_array2frames(width: u16, height: u16, frames_array: Vec<u8>) -> Vec<Vec<u8>> {
     let chunk_size = width as usize * height as usize * 4;
 
@@ -67,29 +53,25 @@ pub fn encode_gif(width: u16, height: u16, frames_array: Vec<u8>) -> Vec<u8> {
     return image;
 }
 
+pub fn rgba2rgb(pixels: &[u8]) -> Vec<u8> {
+    let mut rgb_pixels: Vec<u8> = Vec::new();
+    for v in pixels.chunks(4) {
+        rgb_pixels.extend([v[0], v[1], v[2]].iter().cloned())
+    }
+    return rgb_pixels;
+}
+
 #[wasm_bindgen]
 pub fn decode_png(file: Vec<u8>) -> Vec<u8> {
-    // let path = Path::new("./job-1-1-drag-985.png");
-    // let display = path.display();
+    let r = file.as_slice();
+    let decoder = png::Decoder::new(r);
+    let (info, mut reader) = decoder.read_info().unwrap();
+    // Allocate the output buffer.
+    let mut buf = vec![0; info.buffer_size()];
+    // Read the next frame. Currently this function should only called once.
+    // The default options
+    reader.next_frame(&mut buf).unwrap();
 
-    // let mut file = match File::open(&path) {
-    //     // The `description` method of `io::Error` returns a string that
-    //     // describes the error
-    //     Err(why) => panic!("couldn't open {}: {}", display, why.description()),
-    //     Ok(file) => file,
-    // };
-
-    // let image = File::open(&path).unwrap();
-    //let decoder = png::Decoder::new(file);
-    // let (info, mut reader) = decoder.read_info().unwrap();
-    // // Allocate the output buffer.
-    // let mut buf = vec![0; info.buffer_size()];
-    // // Read the next frame. Currently this function should only called once.
-    // // The default options
-    // reader.next_frame(&mut buf).unwrap();
-
-    // let list = Vec::new();
-    // list.push(file);
-
-    return file;
+    let buf = rgba2rgb(&buf);
+    return buf;
 }

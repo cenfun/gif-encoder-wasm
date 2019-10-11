@@ -1,5 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const UPNG = require("upng-js");
+
 const WasmGifEncoder = require("../lib");
 console.log(WasmGifEncoder);
 
@@ -29,9 +31,16 @@ const getImagePixels = (image, w, h) => {
     return pixels;
 };
 
+const node_decode_png = function(file) {
+    let img = UPNG.decode(file);
+    let pixels = getImagePixels(img.data, img.width, img.height);
+    return pixels;
+};
+
 
 const generateGif = (name) => {
-    let time_start = Date.now();
+
+    let time_start;
     let folder = "test/example/" + name;
     let gifpath = folder + ".gif";
     console.log("start to generate: " + gifpath + " from png folder " + folder + " ...");
@@ -39,14 +48,23 @@ const generateGif = (name) => {
         return folder + "/" + pngname;
     });
 
-    let p = frames[0];
-    let file = fs.readFileSync(path.resolve(p));
-    //console.log(file);
-    let u8a = new Uint8Array(file);
-    //console.log(u8a);
+    //frames.length = 3;
 
-    let buf = WasmGifEncoder.decode_png(u8a);
-    console.log(buf);
+    time_start = Date.now();
+    frames.forEach((p) => {
+        let file = fs.readFileSync(path.resolve(p));
+        let bufW = WasmGifEncoder.decode_png(file);
+        console.log(bufW.length);
+    });
+    console.log("wasm png decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
+
+    time_start = Date.now();
+    frames.forEach((p) => {
+        let file = fs.readFileSync(path.resolve(p));
+        let bufN = node_decode_png(file);
+        console.log(bufN.length);
+    });
+    console.log("node png decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
 
     // let list = frames.map((p) => {
     //     //fs.readFileSync(p)
@@ -60,10 +78,10 @@ const generateGif = (name) => {
 
     //console.log("total frames: " + list.length);
 
-    console.log("generated and cost " + (Date.now() - time_start).toLocaleString() + "ms: " + gifpath);
+
 };
 
 generateGif("screenshot");
-//generateGif("elf");
+generateGif("elf");
 //generateGif("cat");
 //generateGif("photo");

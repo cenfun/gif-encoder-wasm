@@ -6,5 +6,8 @@
     "scripts": {
         "build": "wasm-pack build --target nodejs && node ./scripts/build.js",
         "test": "node ./test/test.js"
+    },
+    "devDependencies": {
+        "upng-js": "^2.1.0"
     }
 }
