@@ -53,18 +53,18 @@ const generateGif = (name) => {
     time_start = Date.now();
     frames.forEach((p) => {
         let file = fs.readFileSync(path.resolve(p));
-        let bufW = WasmGifEncoder.decode_png(file);
-        console.log(bufW.length);
+        let bufN = node_decode_png(file);
+        //console.log(bufN.length);
     });
-    console.log("wasm png decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
+    console.log("node png decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
 
     time_start = Date.now();
     frames.forEach((p) => {
         let file = fs.readFileSync(path.resolve(p));
-        let bufN = node_decode_png(file);
-        console.log(bufN.length);
+        let bufW = WasmGifEncoder.decode_png(file);
+        //console.log(bufW.length);
     });
-    console.log("node png decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
+    console.log("wasm png decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
 
     // let list = frames.map((p) => {
     //     //fs.readFileSync(p)
@@ -83,5 +83,5 @@ const generateGif = (name) => {
 
 generateGif("screenshot");
 generateGif("elf");
-//generateGif("cat");
-//generateGif("photo");
+generateGif("cat");
+generateGif("photo");

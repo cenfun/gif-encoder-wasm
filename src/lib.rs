@@ -18,6 +18,16 @@ cfg_if! {
 }
 
 #[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(a: &str);
+}
+
+macro_rules! console_log {
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
+
+#[wasm_bindgen]
 pub fn add(a: i32, b: i32) -> i32 {
     return a + b;
 }
@@ -63,6 +73,8 @@ pub fn rgba2rgb(pixels: &[u8]) -> Vec<u8> {
 
 #[wasm_bindgen]
 pub fn decode_png(file: Vec<u8>) -> Vec<u8> {
+    console_log!("decode_png");
+
     let r = file.as_slice();
     let decoder = png::Decoder::new(r);
     let (info, mut reader) = decoder.read_info().unwrap();
