@@ -8,6 +8,7 @@
         "test": "node ./test/test.js"
     },
     "devDependencies": {
+        "screencast-gif": "^1.0.1",
         "upng-js": "^2.1.0"
     }
 }
