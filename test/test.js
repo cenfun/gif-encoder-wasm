@@ -57,12 +57,13 @@ const generateGif = (name) => {
     let time_start;
     let folder = "test/example/" + name;
     let gifpath = folder + ".gif";
-    console.log("start to generate: " + gifpath + " from png folder " + folder + " ...");
     let frames = fs.readdirSync(folder).map((pngname) => {
         return folder + "/" + pngname;
     });
 
     //frames.length = 2;
+
+    console.log("start to generate: " + gifpath + " (" + frames.length + " frames) ...");
 
     let fileBufs = frames.map(function(p) {
         return fs.readFileSync(path.resolve(p));
@@ -77,7 +78,7 @@ const generateGif = (name) => {
         frames: fileBufs
     });
     fs.writeFileSync(folder + "-node.gif", bufN);
-    console.log("node decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
+    console.log("node cost: " + (Date.now() - time_start).toLocaleString() + "ms");
 
     //wasm ================================================================
     time_start = Date.now();
@@ -101,15 +102,15 @@ const generateGif = (name) => {
         info_list.push(frame.width);
         info_list.push(frame.height);
     });
-    console.log("totalLength: " + totalLength);
+    //console.log("totalLength: " + totalLength);
     let data_list = Buffer.concat(frameList.map(frame => frame.data), totalLength);
     let bufW = WasmGifEncoder.encode_gif(maxWidth, maxHeight, frameList.length, info_list, data_list);
     fs.writeFileSync(folder + "-wasm.gif", bufW);
-    console.log("wasm decode cost: " + (Date.now() - time_start).toLocaleString() + "ms");
+    console.log("wasm cost: " + (Date.now() - time_start).toLocaleString() + "ms");
 
 };
 
 generateGif("screenshot");
-//generateGif("elf");
-//generateGif("cat");
-//generateGif("photo");
+generateGif("elf");
+generateGif("cat");
+generateGif("photo");

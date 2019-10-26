@@ -70,6 +70,7 @@ pub fn encode_gif(
     {
         let global_palette = [0xFF, 0xFF, 0xFF, 0, 0, 0];
         let mut encoder = gif::Encoder::new(&mut image, width, height, &global_palette).unwrap();
+        //encoder.set(gif::Repeat::Infinite).unwrap();
 
         let mut start = 0;
         let mut i = 0;
