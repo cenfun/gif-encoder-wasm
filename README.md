@@ -48,3 +48,5 @@ wasm cost: 17ms
 
 * [`wasm-pack`](https://github.com/rustwasm/wasm-pack) 
 * [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) 
+* [`image-gif`](https://github.com/image-rs/image-gif) 
+* [`image-png`](https://github.com/image-rs/image-png) 
