@@ -5,4 +5,4 @@ Cargo.lock
 bin/
 pkg/
 wasm-pack.log
-test/example
+/package-lock.json
