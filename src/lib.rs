@@ -2,14 +2,17 @@ mod utils;
 
 //extern crate png_decoder;
 extern crate wasm_bindgen;
-extern crate wee_alloc;
+extern crate lol_alloc;
 
 //use png_decoder::png::decode_no_check;
 use wasm_bindgen::prelude::*;
 
-// Use `wee_alloc` as the global allocator.
+#[cfg(target_arch = "wasm32")]
+use lol_alloc::{FreeListAllocator, LockedAllocator};
+
+#[cfg(target_arch = "wasm32")]
 #[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+static ALLOCATOR: LockedAllocator = LockedAllocator::new(FreeListAllocator::new());
 
 #[wasm_bindgen]
 extern "C" {
