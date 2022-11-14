@@ -4,7 +4,7 @@
     "description": "wasm-gif-encoder",
     "main": "lib/index.js",
     "scripts": {
-        "build": "wasm-pack build --target nodejs --out-dir lib --out-name index && node ./scripts/build.js",
+        "build": "wasm-pack build --target nodejs --out-dir lib --out-name index && node ./scripts/clear.js",
         "test": "node ./test/test.js"
     },
     "devDependencies": {

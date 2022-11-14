@@ -1,4 +1,4 @@
-mod utils;
+// mod utils;
 
 //extern crate png_decoder;
 extern crate lol_alloc;
