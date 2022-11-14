@@ -2,11 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const UPNG = require('upng-js');
 const ScreencastGIF = require('screencast-gif');
+const CG = require('console-grid');
 
 const WasmGifEncoder = require('../lib');
-console.log(WasmGifEncoder);
-console.log(`number add: ${WasmGifEncoder.add(123, 456)}`);
-console.log(`string join: ${WasmGifEncoder.str('str1 ', 'str2')}`);
+// console.log(WasmGifEncoder);
+console.assert(WasmGifEncoder.add(123, 456) === 579, 'number add: 123 + 456 = 579');
+console.assert(WasmGifEncoder.str('str1', 'str2') === 'str1str2', 'string join: str1 + str2 = str1str2');
 console.log('==========================================================');
 
 const mergeColor = function(c, b, p) {
@@ -51,6 +52,7 @@ const getImagePixels = (image, w, h, bgColor = 0xffffff) => {
     return pixels;
 };
 
+const rows = [];
 
 const generateGif = (name) => {
 
@@ -75,16 +77,23 @@ const generateGif = (name) => {
         return fs.readFileSync(p);
     });
 
+    const subs = [];
+
     // node ================================================================
     time_start = Date.now();
     const bufN = ScreencastGIF({
         frame: {
-            delay: 500
+            delay: 100
         },
         frames: fileBuffers
     });
-    fs.writeFileSync(path.resolve(folder, `${name}-node.gif`), bufN);
-    console.log(`node cost: ${(Date.now() - time_start).toLocaleString()}ms`);
+    let file = `${name}-node.gif`;
+    fs.writeFileSync(path.resolve(folder, file), bufN);
+    subs.push({
+        name: 'node',
+        duration: `${(Date.now() - time_start).toLocaleString()}ms`,
+        file
+    });
 
     // wasm ================================================================
     time_start = Date.now();
@@ -111,12 +120,40 @@ const generateGif = (name) => {
     // console.log("totalLength: " + totalLength);
     const data_list = Buffer.concat(frameList.map((frame) => frame.data), totalLength);
     const bufW = WasmGifEncoder.encode_gif(maxWidth, maxHeight, frameList.length, info_list, data_list);
-    fs.writeFileSync(path.resolve(folder, `${name}-wasm.gif`), bufW);
-    console.log(`wasm cost: ${(Date.now() - time_start).toLocaleString()}ms`);
+    file = `${name}-wasm.gif`;
+    fs.writeFileSync(path.resolve(folder, file), bufW);
+    subs.push({
+        name: 'wasm',
+        duration: `${(Date.now() - time_start).toLocaleString()}ms`,
+        file
+    });
+
+    rows.push({
+        name,
+        duration: '',
+        file: '',
+        subs
+    });
 
 };
 
+generateGif('iamgroot');
 generateGif('screenshot');
-// generateGif('elf');
 // generateGif('cat');
 // generateGif('photo');
+
+
+CG({
+    columns: [{
+        id: 'name',
+        name: 'Test'
+    }, {
+        id: 'duration',
+        name: 'Duration',
+        align: 'right'
+    }, {
+        id: 'file',
+        name: 'File'
+    }],
+    rows
+});

@@ -7,8 +7,8 @@
         "build": "wasm-pack build --target nodejs --out-dir lib --out-name index && node ./scripts/build.js",
         "test": "node ./test/test.js"
     },
-    "dependencies": {},
     "devDependencies": {
+        "console-grid": "^2.0.1",
         "eslint": "^8.26.0",
         "eslint-config-plus": "^1.0.5",
         "eslint-plugin-html": "^7.1.0",

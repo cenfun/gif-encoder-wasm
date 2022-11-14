@@ -1,8 +1,8 @@
 mod utils;
 
 //extern crate png_decoder;
-extern crate wasm_bindgen;
 extern crate lol_alloc;
+extern crate wasm_bindgen;
 
 //use png_decoder::png::decode_no_check;
 use wasm_bindgen::prelude::*;
@@ -96,7 +96,8 @@ pub fn encode_gif(
     }
     let time_end = Date::now();
     let d = time_end - time_start;
-    console_log!("wasm end: {} duration: {}", time_end, d);
+    console_log!("wasm end: {}", time_end);
+    console_log!("wasm duration: {}", d);
     return image;
 }
 

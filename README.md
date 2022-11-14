@@ -16,29 +16,24 @@ npm run test
 ## Test Result
 >Rust-Gif to Wasm-Gif was Bad Performance than Node
 ```
-start to generate: test/example/screenshot.gif (11 frames) ...
-node cost: 1,908ms
-wasm start: 1572059819959
-wasm end: 1572059821920 duration: 1961
-wasm cost: 2,890ms
-
-start to generate: test/example/elf.gif (10 frames) ...
-node cost: 681ms
-wasm start: 1572059823123
-wasm end: 1572059823670 duration: 547
-wasm cost: 729ms
-
-start to generate: test/example/cat.gif (35 frames) ...
-node cost: 888ms
-wasm start: 1572059824863
-wasm end: 1572059825656 duration: 793
-wasm cost: 1,038ms
-
-start to generate: test/example/photo.gif (1 frames) ...
-node cost: 13ms
-wasm start: 1572059825684
-wasm end: 1572059825697 duration: 13
-wasm cost: 17ms
+start to generate: H:\workspace\wasm-gif-encoder\test\example\iamgroot.gif (18 frames) ...
+wasm start: 1668401582742
+wasm end: 1668401584031
+wasm duration: 1289
+start to generate: H:\workspace\wasm-gif-encoder\test\example\screenshot.gif (8 frames) ...
+wasm start: 1668401585459
+wasm end: 1668401586301
+wasm duration: 842
+┌──────────────┬──────────┬─────────────────────┐
+│ Test         │ Duration │ File                │
+├──────────────┼──────────┼─────────────────────┤
+│ ├ iamgroot   │          │                     │
+│ │ ├ node     │  3,548ms │ iamgroot-node.gif   │
+│ │ └ wasm     │  1,820ms │ iamgroot-wasm.gif   │
+│ └ screenshot │          │                     │
+│   ├ node     │  1,136ms │ screenshot-node.gif │
+│   └ wasm     │  1,130ms │ screenshot-wasm.gif │
+└──────────────┴──────────┴─────────────────────┘
 ```
 
 >Rust-Png to Wasm-Png was also Bad Performance: [issue](https://github.com/image-rs/image-png/issues/114)
