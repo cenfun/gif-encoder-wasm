@@ -66,10 +66,12 @@ pub fn encode_gif(
     len: usize,
     info_list: Vec<usize>,
     data_list: Vec<u8>,
+    delay: u16,
 ) -> Vec<u8> {
     let mut image = Vec::new();
     let time_start = Date::now();
     console_log!("wasm start: {}", time_start);
+
     {
         let global_palette = [0xFF, 0xFF, 0xFF, 0, 0, 0];
         let mut encoder = gif::Encoder::new(&mut image, width, height, &global_palette).unwrap();
@@ -87,18 +89,24 @@ pub fn encode_gif(
             //console_log!("slice start: {}  len: {} end: {}", start, bytes_length, end);
             let slice = &data_list[start..end];
 
-            let frame = gif::Frame::from_rgb_speed(w, h, slice, 30);
+            // speed = 1..30
+            let speed = 30;
+            let mut frame = gif::Frame::from_rgb_speed(w, h, slice, speed);
+            //`delay` is given in units of 10 ms.
+            frame.delay = delay / 10;
             encoder.write_frame(&frame).unwrap();
 
             start += bytes_length;
             i += 1;
         }
     }
+
     let time_end = Date::now();
     let d = time_end - time_start;
     console_log!("wasm end: {}", time_end);
     console_log!("wasm duration: {}", d);
-    return image;
+
+    image
 }
 
 /*

@@ -77,13 +77,15 @@ const generateGif = (name) => {
         return fs.readFileSync(p);
     });
 
+    const delay = 100;
+
     const subs = [];
 
     // node ================================================================
     time_start = Date.now();
     const bufN = ScreencastGIF({
         frame: {
-            delay: 100
+            delay
         },
         frames: fileBuffers
     });
@@ -119,7 +121,7 @@ const generateGif = (name) => {
     });
     // console.log("totalLength: " + totalLength);
     const data_list = Buffer.concat(frameList.map((frame) => frame.data), totalLength);
-    const bufW = WasmGifEncoder.encode_gif(maxWidth, maxHeight, frameList.length, info_list, data_list);
+    const bufW = WasmGifEncoder.encode_gif(maxWidth, maxHeight, frameList.length, info_list, data_list, delay);
     file = `${name}-wasm.gif`;
     fs.writeFileSync(path.resolve(folder, file), bufW);
     subs.push({
