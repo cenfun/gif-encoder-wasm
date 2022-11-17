@@ -1,3 +1,5 @@
+extern crate console_error_panic_hook;
+
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -48,10 +50,14 @@ fn get_max_height(frames: &Vec<FrameInfo>) -> u16 {
 }
 
 #[wasm_bindgen]
-pub fn encode(json: JsValue, buffer: Vec<u8>) -> Vec<u8> {
+pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
+    console_error_panic_hook::set_once();
+
     let time_start = js_sys::Date::now();
 
-    let gif_info: GifInfo = serde_wasm_bindgen::from_value(json).unwrap();
+    //let gif_info: GifInfo = serde_wasm_bindgen::from_value(json).unwrap();
+
+    let gif_info: GifInfo = serde_json::from_str(json).unwrap();
     // console_log!("gif info: {:?}", gif_info);
 
     let mut image = Vec::new();
@@ -82,15 +88,23 @@ pub fn encode(json: JsValue, buffer: Vec<u8>) -> Vec<u8> {
         let h = frame_info.height;
         let buffer_length = frame_info.buffer_length;
 
+        // console_log!(
+        //     "frame width: {} height: {} length: {}",
+        //     width,
+        //     height,
+        //     buffer_length
+        // );
+
         let end = start + buffer_length;
-        let pixels = &buffer[start..end];
+        let input = &buffer[start..end];
+        let pixels = &mut input.to_owned();
 
         start = end;
 
         // speed = 1..30
         let speed = 30;
 
-        let mut frame = gif::Frame::from_rgb_speed(w, h, pixels, speed);
+        let mut frame = gif::Frame::from_rgba_speed(w, h, pixels, speed);
         // `delay` is given in units of 10 ms.
         frame.delay = frame_info.delay / 10;
         encoder.write_frame(&frame).unwrap();

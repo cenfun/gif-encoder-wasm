@@ -10,48 +10,6 @@ console.log(WasmGifEncoder);
 
 console.log('==========================================================');
 
-const mergeColor = function(c, b, p) {
-    const v = c * p + b * (1 - p);
-    return Math.round(v);
-};
-
-const getImagePixels = (image, w, h, bgColor = 0xffffff) => {
-
-    const bgR = bgColor >> 16 & 0xff;
-    const bgG = bgColor >> 8 & 0xff;
-    const bgB = bgColor & 0xff;
-
-    const l = w * h;
-    // png rgba 4 => rgb 3
-    const pixels = new Uint8Array(l * 3);
-    let i = 0;
-    let j = 0;
-    while (i < l) {
-        let p = i * 4;
-        let r = image[p++];
-        let g = image[p++];
-        let b = image[p++];
-        const a = image[p++];
-        if (a === 0) {
-            r = bgR;
-            g = bgG;
-            b = bgB;
-        } else if (a !== 255) {
-            // console.log(r, g, b, a);
-            const per = a / 255;
-            r = mergeColor(r, bgR, per);
-            g = mergeColor(g, bgG, per);
-            b = mergeColor(b, bgB, per);
-            // console.log(r, g, b);
-        }
-        pixels[j++] = r;
-        pixels[j++] = g;
-        pixels[j++] = b;
-        i++;
-    }
-    return pixels;
-};
-
 const rows = [];
 
 const generateGif = (name) => {
@@ -103,22 +61,37 @@ const generateGif = (name) => {
     let totalLength = 0;
     const frames = fileBuffers.map((fileBuf) => {
         const img = UPNG.decode(fileBuf);
-        const pixels = getImagePixels(img.data, img.width, img.height);
+        const width = img.width;
+        const height = img.height;
+        // rgb
+        // const pixels = getImagePixels(img.data, img.width, img.height);
+
+        // rgba
+        const pixels = new Uint8Array(UPNG.toRGBA8(img)[0]);
+
+        // console.log(pixels);
+        // debugger;
+
         totalPixels.push(pixels);
         const buffer_length = pixels.length;
+        // console.log(`width: ${width} height: ${height} buffer_length: ${buffer_length}`);
+
+        console.assert(pixels.length === width * height * 4);
+
         totalLength += buffer_length;
+
         return {
-            width: img.width,
-            height: img.height,
+            width,
+            height,
             delay,
             buffer_length
         };
     });
 
-    const gifInfo = {
+    const gifInfo = JSON.stringify({
         repeat: 0,
         frames
-    };
+    });
     // console.log(gifInfo);
 
     const buffer = Buffer.concat(totalPixels, totalLength);
@@ -143,11 +116,9 @@ const generateGif = (name) => {
 
 };
 
+generateGif('elf');
 generateGif('iamgroot');
 generateGif('screenshot');
-// generateGif('cat');
-// generateGif('photo');
-
 
 CG({
     columns: [{
