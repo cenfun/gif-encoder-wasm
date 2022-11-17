@@ -56,15 +56,24 @@ pub fn encode(json: JsValue, buffer: Vec<u8>) -> Vec<u8> {
 
     let mut image = Vec::new();
 
+    let repeat = gif_info.repeat;
+    // console_log!("gif repeat: {}", repeat);
+
     let frames = gif_info.frames;
     // init max width and height
     let width = get_max_width(&frames);
     let height = get_max_height(&frames);
-
     // console_log!("gif width: {} height: {}", width, height);
 
     let global_palette = [0xFF, 0xFF, 0xFF, 0, 0, 0];
     let mut encoder = gif::Encoder::new(&mut image, width, height, &global_palette).unwrap();
+
+    // 0 for Infinite
+    if repeat == 0 {
+        encoder.set_repeat(gif::Repeat::Infinite).unwrap();
+    } else {
+        encoder.set_repeat(gif::Repeat::Finite(repeat - 1)).unwrap();
+    }
 
     let mut start = 0;
 
