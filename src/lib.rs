@@ -1,164 +1,95 @@
-// mod utils;
-
-//extern crate png_decoder;
-extern crate lol_alloc;
-extern crate wasm_bindgen;
-
-//use png_decoder::png::decode_no_check;
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-
-#[cfg(target_arch = "wasm32")]
-use lol_alloc::{FreeListAllocator, LockedAllocator};
-
-#[cfg(target_arch = "wasm32")]
-#[global_allocator]
-static ALLOCATOR: LockedAllocator = LockedAllocator::new(FreeListAllocator::new());
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
-    fn log(a: &str);
-
-    type Date;
-
-    #[wasm_bindgen(static_method_of = Date)]
-    pub fn now() -> f64;
+    fn log(s: &str);
 }
 
 macro_rules! console_log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-#[wasm_bindgen]
-pub fn add(a: i32, b: i32) -> i32 {
-    return a + b;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FrameInfo {
+    pub width: u16,
+    pub height: u16,
+    pub delay: u16,
+    pub buffer_length: usize,
 }
 
-#[wasm_bindgen]
-pub fn str(str1: String, str2: String) -> String {
-    let mut s = String::new();
-    s.push_str(&str1);
-    s.push_str(&str2);
-    return s;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GifInfo {
+    pub repeat: u16,
+    pub frames: Vec<FrameInfo>,
 }
 
-pub fn rgba2rgb(pixels: &[u8]) -> Vec<u8> {
-    let mut rgb_pixels: Vec<u8> = Vec::new();
-    for v in pixels.chunks(4) {
-        rgb_pixels.extend([v[0], v[1], v[2]].iter().cloned())
-    }
-    return rgb_pixels;
-}
-
-pub fn frames_array2frames(width: u16, height: u16, frames_array: Vec<u8>) -> Vec<Vec<u8>> {
-    let chunk_size = width as usize * height as usize * 4;
-    let mut res = Vec::new();
-    for v in frames_array.chunks(chunk_size) {
-        res.push(rgba2rgb(v))
-    }
-    return res;
-}
-
-#[wasm_bindgen]
-pub fn encode_gif(
-    width: u16,
-    height: u16,
-    len: usize,
-    info_list: Vec<usize>,
-    data_list: Vec<u8>,
-    delay: u16,
-) -> Vec<u8> {
-    let mut image = Vec::new();
-    let time_start = Date::now();
-    console_log!("wasm start: {}", time_start);
-
-    {
-        let global_palette = [0xFF, 0xFF, 0xFF, 0, 0, 0];
-        let mut encoder = gif::Encoder::new(&mut image, width, height, &global_palette).unwrap();
-        //encoder.set(gif::Repeat::Infinite).unwrap();
-
-        let mut start = 0;
-        let mut i = 0;
-        let n = info_list.len() / len;
-        while i < len {
-            let p = i * n;
-            let bytes_length = info_list[p];
-            let w = info_list[p + 1] as u16;
-            let h = info_list[p + 2] as u16;
-            let end = start + bytes_length;
-            //console_log!("slice start: {}  len: {} end: {}", start, bytes_length, end);
-            let slice = &data_list[start..end];
-
-            // speed = 1..30
-            let speed = 30;
-            let mut frame = gif::Frame::from_rgb_speed(w, h, slice, speed);
-            //`delay` is given in units of 10 ms.
-            frame.delay = delay / 10;
-            encoder.write_frame(&frame).unwrap();
-
-            start += bytes_length;
-            i += 1;
+fn get_max_width(frames: &Vec<FrameInfo>) -> u16 {
+    let mut v = 0;
+    for frame in frames.iter() {
+        if frame.width > v {
+            v = frame.width;
         }
     }
-
-    let time_end = Date::now();
-    let d = time_end - time_start;
-    console_log!("wasm end: {}", time_end);
-    console_log!("wasm duration: {}", d);
-
-    image
+    v
 }
 
-/*
+fn get_max_height(frames: &Vec<FrameInfo>) -> u16 {
+    let mut v = 0;
+    for frame in frames.iter() {
+        if frame.width > v {
+            v = frame.height;
+        }
+    }
+    v
+}
+
 #[wasm_bindgen]
-pub fn decode_png(size_list: Vec<usize>, file_list: Vec<u8>) -> usize {
-    //console_log!("decode png ...");
+pub fn encode(json: JsValue, buffer: Vec<u8>) -> Vec<u8> {
+    let time_start = js_sys::Date::now();
 
-    let time_start = Date::now();
-    console_log!("wasm start: {}", time_start);
+    let gif_info: GifInfo = serde_wasm_bindgen::from_value(json).unwrap();
+    // console_log!("gif info: {:?}", gif_info);
 
-    let len = size_list.len();
+    let mut image = Vec::new();
 
-    //console_log!("size length: {}", len.to_string());
+    let frames = gif_info.frames;
+    // init max width and height
+    let width = get_max_width(&frames);
+    let height = get_max_height(&frames);
 
-    //let chunk_size = width as usize * height as usize * 4;
+    // console_log!("gif width: {} height: {}", width, height);
+
+    let global_palette = [0xFF, 0xFF, 0xFF, 0, 0, 0];
+    let mut encoder = gif::Encoder::new(&mut image, width, height, &global_palette).unwrap();
 
     let mut start = 0;
 
-    //count += size_list.len() as usize;
+    for frame_info in frames.iter() {
+        let w = frame_info.width;
+        let h = frame_info.height;
+        let buffer_length = frame_info.buffer_length;
 
-    //let slice = &file_list[start..3];
-    //console_log!(" {} {} {}", slice[0], slice[1], slice[2]);
-    //start += slice.len();
+        let end = start + buffer_length;
+        let pixels = &buffer[start..end];
 
-    //console_log!("file length: {}", file_list.len().to_string());
+        start = end;
 
-    let mut i = 0;
+        // speed = 1..30
+        let speed = 30;
 
-    while i < len {
-        let item = size_list[i];
-        let end = start + item;
-        //console_log!("slice start: {}  len: {} end: {}", start, item, end);
-        let file = &file_list[start..end];
-        let png = decode_no_check(file).unwrap();
-        let buf = png.data;
-
-        // let decoder = png::Decoder::new(file);
-        // let (info, mut reader) = decoder.read_info().unwrap();
-        // let mut buf = vec![0; info.buffer_size()];
-        // reader.next_frame(&mut buf).unwrap();
-
-        let rgb_buf = rgba2rgb(&buf);
-
-        start += item;
-        i += 1;
+        let mut frame = gif::Frame::from_rgb_speed(w, h, pixels, speed);
+        // `delay` is given in units of 10 ms.
+        frame.delay = frame_info.delay / 10;
+        encoder.write_frame(&frame).unwrap();
     }
 
-    let time_end = Date::now();
-    let d = time_end - time_start;
-    console_log!("wasm end: {} duration: {}", time_end, d);
+    let result = encoder.get_ref().to_vec();
 
-    return start;
+    console_log!("wasm duration: {}", js_sys::Date::now() - time_start);
+
+    result
 }
-
-*/
