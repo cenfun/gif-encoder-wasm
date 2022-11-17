@@ -5,7 +5,7 @@ const ScreencastGIF = require('screencast-gif');
 const CG = require('console-grid');
 const EC = require('eight-colors');
 
-const WasmGifEncoder = require('../lib');
+const WasmGifEncoder = require('../dist/gew.js');
 console.log(WasmGifEncoder);
 
 console.log('==========================================================');
