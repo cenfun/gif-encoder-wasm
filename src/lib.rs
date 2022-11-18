@@ -1,5 +1,6 @@
 extern crate console_error_panic_hook;
 
+use gif::{DisposalMethod, Encoder, Frame, Repeat};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -19,14 +20,17 @@ macro_rules! console_log {
 pub struct FrameInfo {
     pub width: u16,
     pub height: u16,
-    pub delay: u16,
     pub buffer_length: usize,
+    pub delay: Option<u16>,
+    pub dispose: Option<u8>,
+    pub transparent: Option<u8>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GifInfo {
-    pub repeat: u16,
     pub frames: Vec<FrameInfo>,
+    pub repeat: Option<u16>,
+    pub palette: Option<[u8; 6]>,
 }
 
 fn get_max_width(frames: &Vec<FrameInfo>) -> u16 {
@@ -49,6 +53,34 @@ fn get_max_height(frames: &Vec<FrameInfo>) -> u16 {
     v
 }
 
+fn get_repeat(repeat: Option<u16>) -> Repeat {
+    // console_log!("gif repeat: {}", repeat);
+    if let Some(v) = repeat {
+        Repeat::Finite(v - 1)
+    } else {
+        Repeat::Infinite
+    }
+}
+
+// `delay` is given in units of 10 ms.
+fn get_delay(frame_info: &FrameInfo) -> u16 {
+    if let Some(v) = frame_info.delay {
+        v / 10
+    } else {
+        // default 100ms / 10 = 10
+        10
+    }
+}
+
+fn get_dispose(frame_info: &FrameInfo) -> DisposalMethod {
+    if let Some(v) = frame_info.dispose {
+        if let Some(d) = DisposalMethod::from_u8(v) {
+            return d;
+        }
+    }
+    DisposalMethod::Background
+}
+
 #[wasm_bindgen]
 pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
     console_error_panic_hook::set_once();
@@ -62,9 +94,6 @@ pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
 
     let mut image = Vec::new();
 
-    let repeat = gif_info.repeat;
-    // console_log!("gif repeat: {}", repeat);
-
     let frames = gif_info.frames;
     // init max width and height
     let width = get_max_width(&frames);
@@ -72,14 +101,9 @@ pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
     // console_log!("gif width: {} height: {}", width, height);
 
     let global_palette = [0xFF, 0xFF, 0xFF, 0, 0, 0];
-    let mut encoder = gif::Encoder::new(&mut image, width, height, &global_palette).unwrap();
+    let mut encoder = Encoder::new(&mut image, width, height, &global_palette).unwrap();
 
-    // 0 for Infinite
-    if repeat == 0 {
-        encoder.set_repeat(gif::Repeat::Infinite).unwrap();
-    } else {
-        encoder.set_repeat(gif::Repeat::Finite(repeat - 1)).unwrap();
-    }
+    encoder.set_repeat(get_repeat(gif_info.repeat)).unwrap();
 
     let mut start = 0;
 
@@ -102,11 +126,15 @@ pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
         start = end;
 
         // speed = 1..30
-        let speed = 30;
+        let speed = 10;
 
-        let mut frame = gif::Frame::from_rgba_speed(w, h, pixels, speed);
-        // `delay` is given in units of 10 ms.
-        frame.delay = frame_info.delay / 10;
+        let mut frame = Frame::from_rgba_speed(w, h, pixels, speed);
+
+        frame.delay = get_delay(&frame_info);
+
+        frame.dispose = get_dispose(&frame_info);
+        frame.transparent = frame_info.transparent;
+
         encoder.write_frame(&frame).unwrap();
     }
 

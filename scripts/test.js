@@ -10,24 +10,21 @@ console.log(WasmGifEncoder);
 
 console.log('==========================================================');
 
-const rows = [];
+const generateGif = (item) => {
+    const name = item.name;
+    const inputDir = item.inputDir;
+    const outputDir = item.outputDir;
 
-const generateGif = (name) => {
-
-    let time_start;
-    const folder = path.resolve('example');
-
-    const pngFolder = path.resolve(folder, name);
-    const files = fs.readdirSync(pngFolder).map((pngName) => {
-        return path.resolve(pngFolder, pngName);
+    const files = fs.readdirSync(inputDir).map((png) => {
+        return path.resolve(inputDir, png);
     });
 
     if (!files.length) {
-        throw new Error(`Not found PNGs: ${pngFolder}`);
+        throw new Error(`Not found PNG files: ${inputDir}`);
     }
 
     // files.length = 2;
-    console.log(`generating: ${EC.cyan(name)} - ${EC.green(files.length)} frames ...`);
+    console.log(`Generating: ${EC.cyan(name)} - ${EC.green(files.length)} frames ...`);
 
     const fileBuffers = files.map(function(p) {
         return fs.readFileSync(p);
@@ -38,16 +35,15 @@ const generateGif = (name) => {
     const subs = [];
 
     // node ================================================================
-    time_start = Date.now();
+    let time_start = Date.now();
     const bufN = ScreencastGIF({
-        loop: 0,
         frame: {
             delay
         },
         frames: fileBuffers
     });
     let file = `${name}-node.gif`;
-    fs.writeFileSync(path.resolve(folder, file), bufN);
+    fs.writeFileSync(path.resolve(outputDir, file), bufN);
     subs.push({
         name: 'node',
         duration: `${(Date.now() - time_start).toLocaleString()}ms`,
@@ -63,19 +59,13 @@ const generateGif = (name) => {
         const img = UPNG.decode(fileBuf);
         const width = img.width;
         const height = img.height;
-        // rgb
-        // const pixels = getImagePixels(img.data, img.width, img.height);
 
         // rgba
         const pixels = new Uint8Array(UPNG.toRGBA8(img)[0]);
 
-        // console.log(pixels);
-        // debugger;
-
         totalPixels.push(pixels);
         const buffer_length = pixels.length;
         // console.log(`width: ${width} height: ${height} buffer_length: ${buffer_length}`);
-
         console.assert(pixels.length === width * height * 4);
 
         totalLength += buffer_length;
@@ -89,7 +79,7 @@ const generateGif = (name) => {
     });
 
     const gifInfo = JSON.stringify({
-        repeat: 0,
+        // repeat: 0,
         frames
     });
     // console.log(gifInfo);
@@ -99,7 +89,7 @@ const generateGif = (name) => {
     const bufW = WasmGifEncoder.encode(gifInfo, buffer);
     file = `${name}-wasm.gif`;
 
-    fs.writeFileSync(path.resolve(folder, file), bufW);
+    fs.writeFileSync(path.resolve(outputDir, file), bufW);
 
     subs.push({
         name: 'wasm',
@@ -107,30 +97,56 @@ const generateGif = (name) => {
         file
     });
 
-    rows.push({
+    return {
         name,
         duration: '',
         file: '',
         subs
+    };
+
+};
+
+
+const main = () => {
+
+    const outputDir = path.resolve(__dirname, '../example');
+    const dirs = fs.readdirSync(outputDir);
+
+    const list = dirs.map((item) => {
+        const p = path.resolve(outputDir, item);
+        const stat = fs.statSync(p);
+        if (stat.isDirectory()) {
+            return {
+                name: item,
+                inputDir: p,
+                outputDir
+            };
+        }
+    });
+
+    const rows = [];
+
+    list.filter((item) => item).forEach((item) => {
+        const row = generateGif(item);
+        rows.push(row);
+    });
+
+    CG({
+        columns: [{
+            id: 'name',
+            name: 'Test'
+        }, {
+            id: 'duration',
+            name: 'Duration',
+            align: 'right'
+        }, {
+            id: 'file',
+            name: 'File'
+        }],
+        rows
     });
 
 };
 
-generateGif('elf');
-generateGif('iamgroot');
-generateGif('screenshot');
 
-CG({
-    columns: [{
-        id: 'name',
-        name: 'Test'
-    }, {
-        id: 'duration',
-        name: 'Duration',
-        align: 'right'
-    }, {
-        id: 'file',
-        name: 'File'
-    }],
-    rows
-});
+main();
