@@ -5,8 +5,7 @@ const cp = require('child_process');
 
 const main = () => {
 
-    const outName = 'gew';
-    const cmd = `wasm-pack build --out-dir dist --out-name ${outName} --target nodejs`;
+    const cmd = 'wasm-pack build --out-dir dist --out-name ge --target nodejs';
     cp.execSync(cmd);
 
     // clean

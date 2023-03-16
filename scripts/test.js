@@ -5,7 +5,7 @@ const ScreencastGIF = require('screencast-gif');
 const CG = require('console-grid');
 const EC = require('eight-colors');
 
-const WasmGifEncoder = require('../dist/gew.js');
+const WasmGifEncoder = require('../dist/ge.js');
 console.log(WasmGifEncoder);
 
 console.log('==========================================================');
@@ -70,12 +70,18 @@ const generateGif = (item) => {
 
         totalLength += buffer_length;
 
-        return {
+        const frame = {
             width,
             height,
-            delay,
-            buffer_length
+            buffer_length,
+            delay
         };
+
+        if (name === 'k') {
+            frame.dispose = 2;
+        }
+
+        return frame;
     });
 
     const gifInfo = JSON.stringify({

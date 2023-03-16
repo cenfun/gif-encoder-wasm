@@ -23,14 +23,14 @@ pub struct FrameInfo {
     pub buffer_length: usize,
     pub delay: Option<u16>,
     pub dispose: Option<u8>,
-    pub transparent: Option<u8>,
+    // pub transparent: Option<u8>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GifInfo {
     pub frames: Vec<FrameInfo>,
     pub repeat: Option<u16>,
-    pub palette: Option<[u8; 6]>,
+    // pub palette: Option<[u8; 6]>,
 }
 
 fn get_max_width(frames: &Vec<FrameInfo>) -> u16 {
@@ -62,9 +62,9 @@ fn get_repeat(repeat: Option<u16>) -> Repeat {
     }
 }
 
-// `delay` is given in units of 10 ms.
-fn get_delay(frame_info: &FrameInfo) -> u16 {
-    if let Some(v) = frame_info.delay {
+fn get_delay(delay: Option<u16>) -> u16 {
+    // `delay` is given in units of 10 ms.
+    if let Some(v) = delay {
         v / 10
     } else {
         // default 100ms / 10 = 10
@@ -72,8 +72,8 @@ fn get_delay(frame_info: &FrameInfo) -> u16 {
     }
 }
 
-fn get_dispose(frame_info: &FrameInfo) -> DisposalMethod {
-    if let Some(v) = frame_info.dispose {
+fn get_dispose(dispose: Option<u8>) -> DisposalMethod {
+    if let Some(v) = dispose {
         if let Some(d) = DisposalMethod::from_u8(v) {
             return d;
         }
@@ -90,7 +90,7 @@ pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
     //let gif_info: GifInfo = serde_wasm_bindgen::from_value(json).unwrap();
 
     let gif_info: GifInfo = serde_json::from_str(json).unwrap();
-    // console_log!("gif info: {:?}", gif_info);
+    //console_log!("gif info: {:?}", gif_info);
 
     let mut image = Vec::new();
 
@@ -130,10 +130,11 @@ pub fn encode(json: &str, buffer: Vec<u8>) -> Vec<u8> {
 
         let mut frame = Frame::from_rgba_speed(w, h, pixels, speed);
 
-        frame.delay = get_delay(&frame_info);
-
-        frame.dispose = get_dispose(&frame_info);
-        frame.transparent = frame_info.transparent;
+        frame.delay = get_delay(frame_info.delay);
+        frame.dispose = get_dispose(frame_info.dispose);
+        // frame.transparent = Some(0);
+        // frame.needs_user_input = true;
+        // frame.interlaced = true;
 
         encoder.write_frame(&frame).unwrap();
     }
